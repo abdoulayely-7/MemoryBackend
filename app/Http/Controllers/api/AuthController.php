@@ -17,11 +17,11 @@ class AuthController extends Controller
             "prenom" => "required",
             "nom" => "required",
             "adresse" => "required",
-            "telephone" => "required",
+            "telephone" => "required|unique:users|min:9",
             "sexe" => "required",
             "email" => "required|email|unique:users",
-            "motDePasse" => "required",
-            "photo" => "nullable|image|mimes:jpeg,png,jpg,gif|max:2048", // Validation pour l'image
+            "motDePasse" => "required|min:6",
+            "photo" => "nullable|image|mimes:jpeg,png,jpg,gif|max:6048", // Validation pour l'image
         ]);
 
         try {
@@ -49,7 +49,7 @@ class AuthController extends Controller
             return response()->json([
                 'statut' => 201,
                 'data' => $user,
-                "token" => null, // Remplacez par $token si vous générez un token
+                "token" => null,
             ], 201);
 
         } catch (\Exception $e) {
@@ -62,27 +62,45 @@ class AuthController extends Controller
         }
     }
 
-
-
-    public function login ( Request $request)
+    public function login(Request $request)
     {
-        $data = $request-> validate(
-            [
-                'email' => 'required|email',
-                'password' => 'required',
-            ]);
-        $token = JWTAuth::attempt($data);
-        if (!$token) {
-            return response()->json(['error' => 'Invalid credentials'], 401);
-        }
-        $user = auth()->user();
-        return response()->json([
-            'status' => '200',
-            'data' => auth()->user(),
-            'role' => $user->role,
-            'token' => $token
+        // Valider les données
+        $request->validate([
+            'email' => 'required|email',
+            'motDePasse' => 'required',
         ]);
+
+        // Rechercher l'utilisateur par email
+        $user = User::where('email', $request->email)->first();
+
+        // Si l'utilisateur n'est pas trouvé ou que le mot de passe ne correspond pas
+        if (!$user || !Hash::check($request->motDePasse, $user->motDePasse)) {
+            return response()->json([
+                'message' => 'Email ou mot de passe incorrect.',
+                'status' => false
+            ], 401);
+        }
+
+        // Générer un token JWT pour l'utilisateur
+        if (!$token = JWTAuth::fromUser($user)) {
+            return response()->json([
+                'message' => 'Erreur lors de la génération du token.',
+                'status' => false
+            ], 500);
+        }
+
+        // Retourner la réponse avec le token et les informations de l'utilisateur
+        return response()->json([
+            'message' => 'Connexion réussie.',
+            'status' => true,
+            'token' => $token,
+            'user' => $user,
+            'roles' => $user->role,
+        ], 200);
     }
+
+
+
 
     public function logout()
     {
