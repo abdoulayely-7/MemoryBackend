@@ -37,10 +37,14 @@ class User extends Authenticatable implements JWTSubject
      * @var array<int, string>
      */
     protected $hidden = [
-        'password',
+        'motDePasse',
         'remember_token',
     ];
 
+    public function getAuthPassword()
+    {
+        return $this->motDePasse;  // Retourner 'motDePasse' comme mot de passe
+    }
     /**
      * The attributes that should be cast.
      *

@@ -23,6 +23,7 @@ Route::post('/login',[\App\Http\Controllers\Api\AuthController::class,'login']);
 Route::post('/register',[\App\Http\Controllers\Api\AuthController::class,'register']);
 
 Route::post('/forget-password', [PasswordResetController::class, 'sendResetLinkEmail']);
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
 
 Route::middleware('auth:api')->group(function ()
 {
