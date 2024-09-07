@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\api\AdminController;
+use App\Http\Controllers\api\AuthController;
 use App\Http\Controllers\api\PasswordResetController;
+use App\Http\Controllers\api\PersonnelleSanteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +30,11 @@ Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']
 
 Route::middleware('auth:api')->group(function ()
 {
-    Route::get('/user-profile',[\App\Http\Controllers\Api\AuthController::class,'profile']);
-    Route::post('/logout',[\App\Http\Controllers\api\AuthController::class,'logout'])->name('logout');
+    Route::get('/user-profile',[AuthController::class,'profile']);
+    Route::post('/logout',[AuthController::class,'logout'])->name('logout');
+    // Pour le medecin et le secreatire
+    Route::post('/loginPersonnel',[AdminController::class,'loginPersonnel']);
+    Route::post('/registerPersonnel',[AdminController::class,'registerPersonnel']);
+    Route::put('/user/{id}/update-status', [AdminController::class, 'updateStatusUser']);
+
 });
