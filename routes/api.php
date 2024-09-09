@@ -37,4 +37,11 @@ Route::middleware('auth:api')->group(function ()
     Route::post('/registerPersonnel',[AdminController::class,'registerPersonnel']);
     Route::put('/user/{id}/update-status', [AdminController::class, 'updateStatusUser']);
 
+    // les services
+    Route::post('/addService',[AdminController::class,'addService']);
+    Route::get('/services', [AdminController::class, 'getServices']);
+    Route::put('/services/{id}', [AdminController::class, 'updateService']);
+    Route::delete('/services/{id}', [AdminController::class, 'destroyService']);
+
+
 });

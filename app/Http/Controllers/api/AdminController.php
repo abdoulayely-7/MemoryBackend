@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Service;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -130,4 +131,53 @@ class AdminController extends Controller
             'message' => 'Utilisateur non trouvé.'
         ], 404);
     }
+
+    public function addService(Request $request)
+    {
+        // Valider les données du formulaire
+        $data = $request->validate([
+            "nom" => "required",
+        ]);
+
+        try {
+
+            // Création de l'utilisateur
+            $service = Service::create($data);
+
+
+            // Réponse avec les données de l'utilisateur et le token
+            return response()->json([
+                'statut' => 201,
+                'data' => $service,
+            ], 201);
+
+        } catch (\Exception $e) {
+            // En cas d'erreur, retourne un message d'erreur
+            return response()->json([
+                "statut" => false,
+                "message" => "Erreur lors de la création du service",
+                "error" => $e->getMessage()
+            ], 500);
+        }
+    }
+    public function getServices()
+    {
+        $services = Service::all();
+        return response()->json(['statut' => 200, 'data' => $services]);
+    }
+    public function updateService(Request $request, $id)
+    {
+        $service = Service::findOrFail($id);
+        $service->update($request->all());
+        return response()->json(['statut' => 200, 'data' => $service]);
+    }
+
+    public function destroyService($id)
+    {
+        $service = Service::findOrFail($id);
+        $service->delete();
+        return response()->json(['statut' => 200, 'message' => 'Service deleted successfully']);
+    }
+
+
 }
