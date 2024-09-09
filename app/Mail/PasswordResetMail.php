@@ -31,6 +31,7 @@ class PasswordResetMail extends Mailable
     public function build()
     {
         return $this->view('emails.password_reset')
-            ->with(['resetUrl' => $this->resetUrl]);
+            ->with(['resetUrl' => $this->resetUrl])
+            ->subject('Réinitialisation de Mot de Passe');
     }
 }

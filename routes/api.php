@@ -1,9 +1,6 @@
 <?php
 
-use App\Http\Controllers\api\AdminController;
-use App\Http\Controllers\api\AuthController;
 use App\Http\Controllers\api\PasswordResetController;
-use App\Http\Controllers\api\PersonnelleSanteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -25,16 +22,32 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/login',[\App\Http\Controllers\Api\AuthController::class,'login']);
 Route::post('/register',[\App\Http\Controllers\Api\AuthController::class,'register']);
 
-Route::post('/forget-password', [PasswordResetController::class, 'sendResetLinkEmail']);
-Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
+//Route::post('/forget-password', [PasswordResetController::class, 'sendResetLinkEmail']);
+//Route::post('/reset-password', [PasswordResetController::class, 'reset']);
+Route::get('forgot-password', [PasswordResetController::class, 'create'])
+    ->middleware('guest')
+    ->name('password.request');
+
+// Route pour envoyer le lien de réinitialisation
+Route::post('/forgot-password', [PasswordResetController::class, 'store'])
+    ->middleware('guest')
+    ->name('password.email');
+
+// Route pour afficher le formulaire de réinitialisation de mot de passe
+
+
+Route::post('/password-reset', [\App\Http\Controllers\Api\NewPasswordController::class, 'store'])
+    ->middleware('guest')
+    ->name('password.update');
+
 
 Route::middleware('auth:api')->group(function ()
 {
-    Route::get('/user-profile',[AuthController::class,'profile']);
-    Route::post('/logout',[AuthController::class,'logout'])->name('logout');
+    Route::get('/user-profile',[\App\Http\Controllers\Api\AuthController::class,'profile']);
+    Route::post('/logout',[\App\Http\Controllers\Api\AuthController::class,'logout'])->name('logout');
     // Pour le medecin et le secreatire
-    Route::post('/loginPersonnel',[AdminController::class,'loginPersonnel']);
-    Route::post('/registerPersonnel',[AdminController::class,'registerPersonnel']);
-    Route::put('/user/{id}/update-status', [AdminController::class, 'updateStatusUser']);
+    Route::post('/loginPersonnel',[\App\Http\Controllers\Api\AdminController::class,'loginPersonnel']);
+    Route::post('/registerPersonnel',[\App\Http\Controllers\Api\AdminController::class,'registerPersonnel']);
+    Route::put('/user/{id}/update-status', [\App\Http\Controllers\Api\AdminController::class, 'updateStatusUser']);
 
 });

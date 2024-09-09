@@ -4,59 +4,48 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Mail\PasswordResetMail;
-use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
+use App\Models\User;
 
 class PasswordResetController extends Controller
 {
-    public function sendResetLinkEmail(Request $request)
-    {
-        $request->validate(['email' => 'required|email']);
-
-        $status = Password::sendResetLink(
-            $request->only('email'),
-            function ($user, $token) {
-                $resetUrl = url('http://localhost:4200/modifierMdp?token=' . $token . '&email=' . urlencode($user->email));
-
-                Mail::to($user->email)->send(new PasswordResetMail($resetUrl));
-            }
-        );
-
-        return $status === Password::RESET_LINK_SENT
-            ? response()->json(['message' => __($status)])
-            : response()->json(['message' => __($status)],400);
-    }
-
-    public function resetPassword(Request $request)
+    /**
+     * Handle an incoming password reset link request.
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    public function store(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => 'required|email',
-            'motDePasse' => 'required|min:6|confirmed',  // 'confirmed' vérifie que 'motDePasse' et 'motDePasse_confirmation' sont les mêmes
-            'token' => 'required',
+            'email' => ['required', 'email'],
         ]);
 
-        $status = Password::reset(
-            $request->only('email', 'motDePasse', 'token'),
-            function ($user, $password) {
-                $user->forceFill([
-                    'motDePasse' => Hash::make($password),
-                ])->setRememberToken(Str::random(60));
+        // Vérifiez si l'utilisateur avec cet email existe
+        $user = User::where('email', $request->email)->first();
 
-                $user->save();
+        if (!$user) {
+            throw ValidationException::withMessages([
+                'email' => ['Aucun utilisateur trouvé avec cet email.'],
+            ]);
+        }
 
-                event(new PasswordReset($user));
-            }
-        );
+        // Générer un token de réinitialisation
+        $token = Password::broker()->createToken($user);
 
-        return $status === Password::PASSWORD_RESET
-            ? response()->json(['message' => 'Mot de passe réinitialisé avec succès.'])
-            : response()->json(['message' => 'Échec de la réinitialisation du mot de passe.'], 500);
+        // Construire l'URL de réinitialisation du mot de passe avec l'URL du frontend
+        $frontendUrl = config('app.frontend_url'); // Assurez-vous que ce paramètre est configuré
+        $resetUrl = "{$frontendUrl}/password-reset?token={$token}&email={$request->email}";
+
+        try {
+            Mail::to($request->email)->send(new PasswordResetMail($resetUrl));
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Erreur lors de l\'envoi de l\'email.'], 500);
+        }
+
+        return response()->json(['status' => 'Link sent']);
     }
-
-
 }
