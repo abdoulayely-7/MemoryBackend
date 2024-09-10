@@ -3,7 +3,6 @@
 use App\Http\Controllers\api\AdminController;
 use App\Http\Controllers\api\AuthController;
 use App\Http\Controllers\api\PasswordResetController;
-use App\Http\Controllers\api\PersonnelleSanteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -27,10 +26,12 @@ Route::post('/register',[\App\Http\Controllers\Api\AuthController::class,'regist
 
 Route::post('/forget-password', [PasswordResetController::class, 'sendResetLinkEmail']);
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
-
+Route::post('/addService',[\App\Http\Controllers\api\ServiceController::class,'store']);
+Route::get('/list-service',[\App\Http\Controllers\api\ServiceController::class,'index']);
 Route::middleware('auth:api')->group(function ()
 {
     Route::get('/user-profile',[AuthController::class,'profile']);
+    Route::get('/user-role',[AuthController::class,'getUserRole']);
     Route::post('/logout',[AuthController::class,'logout'])->name('logout');
     // Pour le medecin et le secreatire
     Route::post('/loginPersonnel',[AdminController::class,'loginPersonnel']);
