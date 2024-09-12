@@ -136,7 +136,7 @@ class AdminController extends Controller
     {
         // Valider les données du formulaire
         $data = $request->validate([
-            "nom" => "required",
+            "nomService" => "required",
         ]);
 
         try {
