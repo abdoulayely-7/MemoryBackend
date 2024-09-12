@@ -133,7 +133,23 @@ class AuthController extends Controller
         return response()->json([
             'prenom' => $user->prenom,
             'nom' => $user->nom,
-            'role' => $user->role
+            'role' => $user->role,
+//            'photo' => $user->photo ? asset($user->photo) : null,
         ]);
+    }
+    public function getUserRole()
+    {
+        // Récupérer l'utilisateur connecté
+        $user = Auth::user();
+
+        // Vérifier si l'utilisateur est authentifié
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Retourner le rôle de l'utilisateur
+        return response()->json([
+            'role' => $user->role,
+        ], 200);  // Statut HTTP 200 OK pour une requête réussie
     }
 }
