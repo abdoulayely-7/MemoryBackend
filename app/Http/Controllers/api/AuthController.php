@@ -152,4 +152,19 @@ class AuthController extends Controller
             'role' => $user->role,
         ], 200);  // Statut HTTP 200 OK pour une requête réussie
     }
+    public function getPatient()
+    {
+        // Récupérer l'utilisateur connecté
+        $user = Auth::user();
+
+        // Vérifier si l'utilisateur est authentifié
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Retourner le rôle de l'utilisateur
+        return response()->json([
+            'role' => $user->role,
+        ], 200);  // Statut HTTP 200 OK pour une requête réussie
+    }
 }
