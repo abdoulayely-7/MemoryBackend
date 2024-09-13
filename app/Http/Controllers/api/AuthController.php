@@ -70,7 +70,6 @@ class AuthController extends Controller
             'email' => 'required|email',
             'motDePasse' => 'required',
         ]);
-
         // Rechercher l'utilisateur par email
         $user = User::where('email', $request->email)->first();
 
@@ -78,22 +77,26 @@ class AuthController extends Controller
         if (!$user || !Hash::check($request->motDePasse, $user->motDePasse)) {
             return response()->json([
                 'message' => 'Email ou mot de passe incorrect.',
-                'status' => false
+                'status' => 1
             ], 401);
         }
-
+        if ($user->status == 1) {
+            return response()->json([
+                'message' => 'Votre compte est bloqué. Veuillez contacter l\'administrateur.',
+                'status' => 1
+            ], 403);
+        }
         // Générer un token JWT pour l'utilisateur
         if (!$token = JWTAuth::fromUser($user)) {
             return response()->json([
                 'message' => 'Erreur lors de la génération du token.',
-                'status' => false
+//                'status' => false
             ], 500);
         }
-
         // Retourner la réponse avec le token et les informations de l'utilisateur
         return response()->json([
             'message' => 'Connexion réussie.',
-            'status' => true,
+            'status' => 0,
             'token' => $token,
             'user' => $user,
             'roles' => $user->role,
