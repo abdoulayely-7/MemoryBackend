@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\api\AdminController;
 use App\Http\Controllers\api\AuthController;
+use App\Http\Controllers\api\CreneauController;
 use App\Http\Controllers\api\PasswordResetController;
+use App\Http\Controllers\api\PlanningController;
+use App\Http\Controllers\api\RendezVousController;
 use App\Http\Controllers\api\ServiceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -23,10 +26,20 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::post('/registerPersonnel',[AdminController::class,'registerPersonnel']);
-
-
 Route::post('/login',[\App\Http\Controllers\Api\AuthController::class,'login']);
 Route::post('/register',[\App\Http\Controllers\Api\AuthController::class,'register']);
+
+
+Route::post('/plannings', [PlanningController::class, 'store']);
+Route::get('/plannings/{id}', [PlanningController::class, 'show']);
+
+Route::post('/creneaux', [CreneauController::class, 'store']);
+Route::get('/creneaux/{id}', [CreneauController::class, 'show']);
+
+Route::post('/rendez-vous', [RendezVousController::class, 'store']);
+Route::get('/rendez-vous/{id}', [RendezVousController::class, 'show']);
+
+
 
 Route::post('/forget-password', [PasswordResetController::class, 'sendResetLinkEmail']);
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
