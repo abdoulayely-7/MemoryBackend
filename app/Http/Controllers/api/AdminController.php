@@ -7,6 +7,7 @@ use App\Models\Service;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use PHPUnit\Exception;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -24,9 +25,10 @@ class AdminController extends Controller
             "email" => "required|email|unique:users",
             "motDePasse" => "required|min:6",
             "role" => "required",
+            "service_id" => "required|exists:services,id",
             "photo" => "nullable|image|mimes:jpeg,png,jpg,gif|max:6048", // Validation pour l'image
         ]);
-
+        Log::info($data);
         try {
             // Traitement de l'upload de l'image
             if ($request->hasFile('photo')) {
@@ -46,13 +48,14 @@ class AdminController extends Controller
             $user = User::create($data);
 
             // Génération du token JWT (si nécessaire, sinon laisser null)
-            $token = JWTAuth::fromUser($user);
+//            $token = JWTAuth::fromUser($user);
 
             // Réponse avec les données de l'utilisateur et le token
             return response()->json([
                 'statut' => 201,
                 'data' => $user,
-                "token" => $token,
+                'service' => $user -> service_id,
+//                "token" => $token,
             ], 201);
 
         } catch (\Exception $e) {
@@ -128,23 +131,25 @@ class AdminController extends Controller
 
     public function getUser()
     {
-        $user = User::where('role', '!=', 'admin')->get();
-        //$token = JWTAuth::fromUser($user);
         try {
+            $users = User::where('role', '!=', 'admin')
+                ->with('service') // Inclure les détails du service
+                ->get();
+
             return response()->json([
                 'statut' => 201,
-                'data' => $user,
+                'data' => $users,
                 "token" => null,
             ], 201);
-        }catch (Exception $e)
-        {
+        } catch (\Exception $e) {
             return response()->json([
                 "statut" => false,
-                "message" => "Erreur lors de la recuperation des utilisateurs",
+                "message" => "Erreur lors de la récupération des utilisateurs",
                 "error" => $e->getMessage()
             ], 500);
         }
     }
+
 
     public function addService(Request $request)
     {

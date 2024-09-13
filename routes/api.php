@@ -3,6 +3,7 @@
 use App\Http\Controllers\api\AdminController;
 use App\Http\Controllers\api\AuthController;
 use App\Http\Controllers\api\PasswordResetController;
+use App\Http\Controllers\api\ServiceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -21,13 +22,16 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::post('/registerPersonnel',[AdminController::class,'registerPersonnel']);
+
+
 Route::post('/login',[\App\Http\Controllers\Api\AuthController::class,'login']);
 Route::post('/register',[\App\Http\Controllers\Api\AuthController::class,'register']);
 
 Route::post('/forget-password', [PasswordResetController::class, 'sendResetLinkEmail']);
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
-Route::post('/addService',[\App\Http\Controllers\api\ServiceController::class,'store']);
-Route::get('/list-service',[\App\Http\Controllers\api\ServiceController::class,'index']);
+Route::post('/addService',[ServiceController::class,'store']);
+Route::get('/list-service',[ServiceController::class,'index']);
 Route::post('/updateStatusUser/{objet}',[AdminController::class,'updateStatusUser']);
 Route::middleware('auth:api')->group(function ()
 {
@@ -38,7 +42,6 @@ Route::middleware('auth:api')->group(function ()
 
     // Pour le medecin et le secreatire
     Route::post('/loginPersonnel',[AdminController::class,'loginPersonnel']);
-    Route::post('/registerPersonnel',[AdminController::class,'registerPersonnel']);
     Route::put('/user/{id}/update-status', [AdminController::class, 'updateStatusUser']);
 
     // les services
