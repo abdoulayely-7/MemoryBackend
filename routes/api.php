@@ -28,11 +28,14 @@ Route::post('/forget-password', [PasswordResetController::class, 'sendResetLinkE
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
 Route::post('/addService',[\App\Http\Controllers\api\ServiceController::class,'store']);
 Route::get('/list-service',[\App\Http\Controllers\api\ServiceController::class,'index']);
+Route::post('/updateStatusUser/{objet}',[AdminController::class,'updateStatusUser']);
 Route::middleware('auth:api')->group(function ()
 {
     Route::get('/user-profile',[AuthController::class,'profile']);
     Route::get('/user-role',[AuthController::class,'getUserRole']);
     Route::post('/logout',[AuthController::class,'logout'])->name('logout');
+    Route::get('/list-user',[AdminController::class,'getUser']);
+
     // Pour le medecin et le secreatire
     Route::post('/loginPersonnel',[AdminController::class,'loginPersonnel']);
     Route::post('/registerPersonnel',[AdminController::class,'registerPersonnel']);
