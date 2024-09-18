@@ -46,6 +46,12 @@ Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']
 Route::post('/addService',[ServiceController::class,'store']);
 Route::get('/list-service',[ServiceController::class,'index']);
 Route::post('/updateStatusUser/{objet}',[AdminController::class,'updateStatusUser']);
+Route::get('/detMed/{objet}',[PlanningController::class,'getDoctorDetails']);
+Route::post('/addPlanning',[PlanningController::class,'store']);
+Route::get('/allDoctor',[AuthController::class,'getAllDoctor']);
+Route::get('/displayPlanning/{objet}/{date}',[PlanningController::class,'getDisponibilites']);
+Route::get('/listRdvMed/{objet}',[RendezVousController::class,'getMedecinAppointments']);
+Route::post('/valideRdv/{objet}',[RendezVousController::class,'validaterdv']);
 Route::middleware('auth:api')->group(function ()
 {
     Route::get('/user-profile',[AuthController::class,'profile']);
@@ -57,11 +63,15 @@ Route::middleware('auth:api')->group(function ()
     Route::post('/loginPersonnel',[AdminController::class,'loginPersonnel']);
     Route::put('/user/{id}/update-status', [AdminController::class, 'updateStatusUser']);
 
+
     // les services
-    Route::post('/addService',[AdminController::class,'addService']);
-    Route::get('/services', [AdminController::class, 'getServices']);
+//    Route::post('/addService',[AdminController::class,'addService']);
+//    Route::get('/services', [AdminController::class, 'getServices']);
+    Route::get('/list-med-service',[AuthController::class,'getMedecinMemeService']);
     Route::put('/services/{id}', [AdminController::class, 'updateService']);
     Route::delete('/services/{id}', [AdminController::class, 'destroyService']);
 
+    // Pour le patient
+    Route::post('/addRdv',[RendezVousController::class,'store']);
 
 });

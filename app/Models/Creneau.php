@@ -13,7 +13,7 @@ class Creneau extends Model
     // Relation avec le planning
     public function planning()
     {
-        return $this->belongsTo(Planning::class);
+        return $this->belongsTo(Planning::class,'planning_id');
     }
 
     // Relation avec les rendez-vous

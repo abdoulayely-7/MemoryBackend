@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('creneaus', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('medecin_id');
-            $table->string('jour'); // exemple: 'lundi', 'mardi'
+            $table->unsignedBigInteger('planning_id');
+            //$table->string('jour'); // exemple: 'lundi', 'mardi'
             $table->time('heureDebut');
             $table->time('heureFin');
             $table->timestamps();
 
             // Foreign key
-            $table->foreign('medecin_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('planning_id')->references('id')->on('plannings')->onDelete('cascade');
         });
     }
 

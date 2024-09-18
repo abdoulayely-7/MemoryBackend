@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class RendezVous extends Model
 {
     use HasFactory;
-    protected $fillable = ['patient_id', 'creneau_id', 'status', 'motif'];
+    protected $fillable = ['patient_id', 'creneau_id','medecin_id', 'status', 'motif'];
 
     // Relation avec le patient (utilisateur)
     public function patient()
@@ -20,5 +20,9 @@ class RendezVous extends Model
     public function creneau()
     {
         return $this->belongsTo(Creneau::class);
+    }
+    public function medecin()
+    {
+        return $this->belongsTo(User::class, 'medecin_id');
     }
 }

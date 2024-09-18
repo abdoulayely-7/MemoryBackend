@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Service;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -169,5 +170,63 @@ class AuthController extends Controller
         return response()->json([
             'role' => $user->role,
         ], 200);  // Statut HTTP 200 OK pour une requête réussie
+    }
+    public function getMedecinMemeService()
+    {
+        try {
+            // Obtenir l'utilisateur connecté (secrétaire)
+            $secretaire = auth()->user();
+
+            // Vérifier si l'utilisateur connecté est bien un secrétaire
+            if ($secretaire->role !== 'secretaire') {
+                return response()->json([
+                    'statut' => false,
+                    'message' => 'Utilisateur non autorisé'
+                ], 403);
+            }
+
+            // Récupérer les médecins dans le même service que le secrétaire
+            $medecins = User::where('service_id', $secretaire->service_id)
+                ->where('role', 'medecin')
+                ->with('service') // Inclure les informations du service des médecins
+                ->get();
+
+            // Inclure également les informations du service du secrétaire
+            $serviceSecretaire = Service::find($secretaire->service_id);
+
+            $token = JWTAuth::fromUser($secretaire);
+            return response()->json([
+                'statut' => 201,
+                'data' => $medecins,
+                'secretaireService' => $serviceSecretaire,
+                'token' => $token,
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'statut' => false,
+                'message' => 'Erreur lors de la récupération des médecins',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+    public function getAllDoctor()
+    {
+        try {
+            $medecin = User::where('role','medecin')->with('service')->get();
+
+            return response()->json([
+                'statut' => 201,
+                'data' => $medecin
+            ], 201);
+
+        }catch (\Exception $e)
+        {
+            return response()->json([
+                'statut' => false,
+                'message' => 'Erreur lors de la récupération des médecins',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

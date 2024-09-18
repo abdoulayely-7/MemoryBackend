@@ -15,13 +15,15 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('patient_id');
             $table->unsignedBigInteger('creneau_id');
+            $table->unsignedBigInteger('medecin_id');
             $table->string('status'); // 'confirmé', 'annulé', 'reporté', etc.
-            $table->string('commentaire')->nullable();
+            $table->string('motif')->nullable();
             $table->timestamps();
 
             // Foreign keys
+            $table->foreign('medecin_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('patient_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('creneau_id')->references('id')->on('creneaux')->onDelete('cascade');
+            $table->foreign('creneau_id')->references('id')->on('creneaus')->onDelete('cascade');
 
         });
     }

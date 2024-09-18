@@ -9,7 +9,7 @@ class Planning extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['medecin_id', 'jour', 'heureDebut', 'heureFin'];
+    protected $fillable = ['medecin_id', 'datePlanning'];
 
     // Relation avec le médecin (utilisateur)
     public function medecin()
