@@ -4,6 +4,8 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Medecin;
+use App\Models\Specialite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -20,8 +22,9 @@ class AdminController extends Controller
             "telephone" => "required|unique:users|min:9",
             "sexe" => "required",
             "email" => "required|email|unique:users",
-            "motDePasse" => "required|min:6",
-            "role" => "required",
+            "motDePasse" => "required|min:6", // Assurez-vous que ceci correspond au nom de la colonne dans la DB
+            "role" => "required|in:medecin,secretaire",
+            "specialite_id" => "nullable|exists:specialites,id", // Spécifique aux médecins
             "photo" => "nullable|image|mimes:jpeg,png,jpg,gif|max:6048", // Validation pour l'image
         ]);
 
@@ -34,19 +37,30 @@ class AdminController extends Controller
             }
 
             // Hash du mot de passe avant de le stocker
-            $data['motDePasse'] = Hash::make($data['motDePasse']);
-
-            // Définir le statut par défaut à "debloquer"
+            $data['motDePasse'] = Hash::make($data['motDePasse']); // Assurez-vous que ceci correspond au nom de la colonne dans la DB
             $data['status'] = 0;
-
 
             // Création de l'utilisateur
             $user = User::create($data);
 
-            // Génération du token JWT (si nécessaire, sinon laisser null)
-            // $token = JWTAuth::fromUser($user);
+            // Création du médecin ou secrétaire selon le rôle
+            if ($data['role'] === 'medecin') {
+                if (!$data['specialite_id']) {
+                    return response()->json([
+                        'message' => 'La spécialité est requise pour les médecins.',
+                        'status' => false
+                    ], 400);
+                }
 
-            // Réponse avec les données de l'utilisateur et le token
+
+                 $medecinData = [
+                    'specialite_id' => $data['specialite_id'],
+                    'user_id' => $user->id // Assurez-vous que vous avez une colonne user_id dans la table patients
+                ];
+                $medecin = Medecin::create($medecinData);
+            }
+
+            // Réponse avec les données de l'utilisateur
             return response()->json([
                 'statut' => 201,
                 'data' => $user,
@@ -62,6 +76,8 @@ class AdminController extends Controller
             ], 500);
         }
     }
+
+
     public function loginPersonnel(Request $request)
     {
         // Valider les données
@@ -129,5 +145,110 @@ class AdminController extends Controller
         return response()->json([
             'message' => 'Utilisateur non trouvé.'
         ], 404);
+    }
+
+    // Méthodes CRUD pour le personnel
+    public function getPersonnel()
+    {
+        $users = User::with('medecin')->get(); // Inclure les relations si nécessaire
+        return response()->json($users);
+    }
+    public function getAllPersonnel()
+    {
+        $users = User::all(); // Récupère tous les utilisateurs sans inclure de relations
+        return response()->json($users);
+    }
+
+
+    public function getPersonnelById($id)
+    {
+        $user = User::with('medecin')->find($id);
+        if ($user) {
+            return response()->json($user);
+        }
+        return response()->json([
+            'message' => 'Utilisateur non trouvé.'
+        ], 404);
+    }
+
+    public function updatePersonnel(Request $request, $id)
+    {
+        $data = $request->validate([
+            "prenom" => "required",
+            "nom" => "required",
+            "adresse" => "required",
+            "telephone" => "required|min:9",
+            "sexe" => "required",
+            "email" => "required|email",
+            "role" => "required|in:medecin,secretaire",
+            "specialite_id" => "nullable|exists:specialites,id", // Spécifique aux médecins
+            "photo" => "nullable|image|mimes:jpeg,png,jpg,gif|max:6048", // Validation pour l'image
+        ]);
+
+        $user = User::find($id);
+
+        if ($user) {
+            // Traitement de l'upload de l'image
+            if ($request->hasFile('photo')) {
+                $filename = time() . '_' . $request->file('photo')->getClientOriginalName();
+                $path = $request->file('photo')->storeAs('images', $filename, 'public');
+                $data['photo'] = '/storage/' . $path; // Chemin stocké dans la base de données
+            }
+
+            // Mise à jour des données de l'utilisateur
+            $user->update($data);
+
+            // Mise à jour du médecin si nécessaire
+            if ($data['role'] === 'medecin') {
+                $medecin = Medecin::where('user_id', $id)->first();
+                if ($medecin) {
+                    $medecin->update([
+                        'specialite_id' => $data['specialite_id']
+                    ]);
+                } else {
+                    Medecin::create([
+                        'user_id' => $id,
+                        'specialite_id' => $data['specialite_id']
+                    ]);
+                }
+            } else {
+                // Supprimer le médecin si le rôle est modifié
+                Medecin::where('user_id', $id)->delete();
+            }
+
+            return response()->json([
+                'message' => 'Utilisateur mis à jour avec succès.',
+                'user' => $user
+            ], 200);
+        }
+
+        return response()->json([
+            'message' => 'Utilisateur non trouvé.'
+        ], 404);
+    }
+
+    public function deletePersonnel($id)
+    {
+        $user = User::find($id);
+
+        if ($user) {
+            // Supprimer le médecin associé s'il existe
+            Medecin::where('user_id', $id)->delete();
+
+            $user->delete();
+
+            return response()->json([
+                'message' => 'Utilisateur supprimé avec succès.'
+            ], 200);
+        }
+
+        return response()->json([
+            'message' => 'Utilisateur non trouvé.'
+        ], 404);
+    }
+
+    public function getSpecialites()
+    {
+        return Specialite::all();
     }
 }

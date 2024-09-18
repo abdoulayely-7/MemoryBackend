@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Medecin;
+use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
@@ -42,6 +45,13 @@ class AuthController extends Controller
 
             // Création de l'utilisateur
             $user = User::create($data);
+
+            // Création du patient avec un codePatient unique
+            $patientData = [
+                'codePatient' => 'P-' . strtoupper(Str::random(8)),
+                'user_id' => $user->id // Assurez-vous que vous avez une colonne user_id dans la table patients
+            ];
+            $patient = Patient::create($patientData);
 
             // Génération du token JWT (si nécessaire, sinon laisser null)
             // $token = JWTAuth::fromUser($user);
@@ -100,13 +110,10 @@ class AuthController extends Controller
         ], 200);
     }
 
-
-
-
     public function logout()
     {
         auth()->logout();
-        return  response() -> json([
+        return response()->json([
             'status' => 'true',
             'message' => 'Logged out successfully',
             'token' => null
@@ -115,7 +122,7 @@ class AuthController extends Controller
 
     public function refreshToken()
     {
-        $newToken = auth() -> refresh();
+        $newToken = auth()->refresh();
         return response()->json([
             'status' => 'true',
             'token' => $newToken
@@ -136,5 +143,32 @@ class AuthController extends Controller
             'role' => $user->role
         ]);
     }
+
+    public function search(Request $request)
+    {
+        $nom = $request->input('nom');
+        $specialite_id = $request->input('specialite_id');
+
+        // Construire la requête de recherche
+        $query = Medecin::with(['user', 'specialite']); // Inclure les relations
+
+        if ($nom) {
+            $query->whereHas('user', function ($q) use ($nom) {
+                $q->whereRaw('LOWER(nom) LIKE ?', ['%' . strtolower($nom) . '%']);
+            });
+        }
+
+        if ($specialite_id) {
+            $query->where('specialite_id', $specialite_id);
+        }
+
+        // Récupérer les résultats
+        $medecins = $query->get();
+
+        return response()->json($medecins);
+    }
+
+
+
 
 }

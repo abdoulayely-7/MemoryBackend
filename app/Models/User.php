@@ -41,6 +41,12 @@ class User extends Authenticatable implements JWTSubject
         'remember_token',
     ];
 
+    // Relation avec le modèle Medecin
+    public function medecins()
+    {
+        return $this->hasMany(Medecin::class, 'user_id');
+    }
+
     public function getAuthPassword()
     {
         return $this->motDePasse;  // Retourner 'motDePasse' comme mot de passe
