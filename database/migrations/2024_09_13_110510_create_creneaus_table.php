@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('creneaus', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('planning_id');
-            //$table->string('jour'); // exemple: 'lundi', 'mardi'
             $table->time('heureDebut');
             $table->time('heureFin');
             $table->timestamps();

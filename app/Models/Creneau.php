@@ -8,17 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 class Creneau extends Model
 {
     use HasFactory;
-    protected $fillable = ['planning_id', 'heureDebut', 'heureFin'];
+    protected $fillable = [
+        'planning_id', 'heureDebut', 'heureFin', 'status'
+    ];
 
-    // Relation avec le planning
     public function planning()
     {
-        return $this->belongsTo(Planning::class,'planning_id');
+        return $this->belongsTo(Planning::class);
     }
 
-    // Relation avec les rendez-vous
     public function rendezVous()
     {
-        return $this->hasMany(RendezVous::class);
+        return $this->hasMany(RendezVous::class, 'creneau_id');
     }
 }

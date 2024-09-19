@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Creneau;
 use App\Models\RendezVous;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -22,8 +23,15 @@ class RendezVousController extends Controller
             $data['patient_id'] = Auth::id();
             $data['status'] = 'en attente';
 
-
             $rendezVous = RendezVous::create($data);
+
+            // Mettre à jour le créneau pour le marquer comme "en prise"
+            $creneau = Creneau::find($data['creneau_id']);
+            if ($creneau) {
+                $creneau->status = 'en attente de confirmation';
+                $creneau->save();
+            }
+
 //            $token = JWTAuth::fromUser($rendezVous);
 
             return response()->json([

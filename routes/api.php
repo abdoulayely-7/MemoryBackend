@@ -30,7 +30,7 @@ Route::post('/login',[\App\Http\Controllers\Api\AuthController::class,'login']);
 Route::post('/register',[\App\Http\Controllers\Api\AuthController::class,'register']);
 
 
-Route::post('/plannings', [PlanningController::class, 'store']);
+//Route::post('/plannings', [PlanningController::class, 'store']);
 Route::get('/plannings/{id}', [PlanningController::class, 'show']);
 
 Route::post('/creneaux', [CreneauController::class, 'store']);
@@ -43,12 +43,16 @@ Route::get('/rendez-vous/{id}', [RendezVousController::class, 'show']);
 
 Route::post('/forget-password', [PasswordResetController::class, 'sendResetLinkEmail']);
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
+
 Route::post('/addService',[ServiceController::class,'store']);
 Route::get('/list-service',[ServiceController::class,'index']);
+
 Route::post('/updateStatusUser/{objet}',[AdminController::class,'updateStatusUser']);
+
 Route::get('/detMed/{objet}',[PlanningController::class,'getDoctorDetails']);
-Route::post('/addPlanning',[PlanningController::class,'store']);
 Route::get('/allDoctor',[AuthController::class,'getAllDoctor']);
+
+Route::post('/addPlanning',[PlanningController::class,'store']);
 Route::get('/displayPlanning/{objet}/{date}',[PlanningController::class,'getDisponibilites']);
 Route::get('/listRdvMed/{objet}',[RendezVousController::class,'getMedecinAppointments']);
 Route::post('/valideRdv/{objet}',[RendezVousController::class,'validaterdv']);

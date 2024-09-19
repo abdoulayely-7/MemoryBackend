@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('plannings', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('medecin_id');
-            //$table->unsignedBigInteger('creneau_id');
-            $table->string('datePlanning'); // exemple: 'lundi', 'mardi'
+            $table->date('datePlanning'); // exemple: 'lundi', 'mardi'
+            $table->time('heureDebut'); // Heure de début du planning
+            $table->time('heureFin');   // Heure de fin du planning
             $table->timestamps();
 
             // Foreign key
             $table->foreign('medecin_id')->references('id')->on('users')->onDelete('cascade');
-            //$table->foreign('creneau_id')->references('id')->on('creneaus')->onDelete('cascade');
         });
     }
 

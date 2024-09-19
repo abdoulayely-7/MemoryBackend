@@ -6,49 +6,67 @@ use App\Http\Controllers\Controller;
 use App\Models\Creneau;
 use App\Models\Planning;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class PlanningController extends Controller
 {
     public function store(Request $request)
     {
-        $request->validate([
-            'medecin_id' => 'required|exists:users,id',
-            'datePlanning' => 'required|date',
-            'creneaux' => 'required|array',
-            'creneaux.*.heureDebut' => 'required',
-            'creneaux.*.heureFin' => 'required',
+        // Validation des données du formulaire
+        $validatedData = $request->validate([
+            'medecin_id' => 'required|exists:users,id', // Assurez-vous que le médecin existe
+            'datePlanning' => 'required|date', // Date du planning
+            'heureDebut' => 'required|date_format:H:i', // Heure de début
+            'heureFin' => 'required|date_format:H:i|after:heureDebut', // Heure de fin après heureDebut
+            'dureeCreneau' => 'required|integer|min:5|max:60' // Durée en minutes (exemple: 15, 20, 30)
         ]);
 
-        try {
-            // Créer le planning
-            $planning = Planning::create([
-                'medecin_id' => $request->medecin_id,
-                'datePlanning' => $request->datePlanning
-            ]);
+        // Créer le planning pour le médecin
+        $planning = Planning::create([
+            'medecin_id' => $validatedData['medecin_id'],
+            'datePlanning' => $validatedData['datePlanning'],
+            'heureDebut' => $validatedData['heureDebut'],
+            'heureFin' => $validatedData['heureFin'],
+        ]);
 
-            // Créer les créneaux
-            foreach ($request->creneaux as $creneau) {
-                Creneau::create([
-                    'planning_id' => $planning->id, // Utilisez l'ID du planning créé
-                    'heureDebut' => $creneau['heureDebut'],
-                    'heureFin' => $creneau['heureFin']
-                ]);
+        // Générer les créneaux en fonction de la durée spécifiée
+        $this->genererCreneaux($planning, $validatedData['dureeCreneau']);
+
+        return response()->json(['message' => 'Planning et créneaux créés avec succès!']);
+    }
+
+    /**
+     * Générer les créneaux pour un planning donné en fonction de la durée demandée.
+     */
+    private function genererCreneaux(Planning $planning, int $dureeCreneau)
+    {
+        $heureDebut = Carbon::createFromFormat('H:i', $planning->heureDebut);
+        $heureFin = Carbon::createFromFormat('H:i', $planning->heureFin);
+
+        // Boucle pour générer les créneaux
+        while ($heureDebut->lt($heureFin)) {
+            $debutCreneau = $heureDebut->copy();
+            $finCreneau = $heureDebut->copy()->addMinutes($dureeCreneau);
+
+            // Vérifier que le créneau ne dépasse pas l'heure de fin
+            if ($finCreneau->gt($heureFin)) {
+                break;
             }
 
-            return response()->json([
-                'statut' => 201,
-                'data' => $planning,
-                'message' => 'Planning créé avec succès',
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'statut' => false,
-                'message' => 'Erreur lors de la création du planning',
-                'error' => $e->getMessage()
-            ], 500);
+            // Créer le créneau
+            Creneau::create([
+                'planning_id' => $planning->id,
+                'heureDebut' => $debutCreneau->format('H:i'),
+                'heureFin' => $finCreneau->format('H:i'),
+                'status' => 'libre', // Statut par défaut
+            ]);
+
+            // Avancer à la fin du créneau pour générer le suivant
+            $heureDebut = $finCreneau;
         }
     }
+
 
 
     public function show($id)
@@ -95,7 +113,7 @@ class PlanningController extends Controller
             $creneaux = Creneau::where('planning_id', $planning->id)
                 ->whereDoesntHave('rendezVous', function($query) {
                     // Exclure les créneaux déjà réservés
-                    $query->where('status', 'confirmé');
+                    $query->where('status', 'en attente de confirmation');
                 })
                 ->get();
 
