@@ -38,6 +38,7 @@ Route::get('/creneaux/{id}', [CreneauController::class, 'show']);
 
 Route::post('/rendez-vous', [RendezVousController::class, 'store']);
 Route::get('/rendez-vous/{id}', [RendezVousController::class, 'show']);
+Route::get('/mesRdv/{objet}',[RendezVousController::class,'getMedecinAppointment']);
 
 
 
@@ -52,6 +53,7 @@ Route::get('/allDoctor',[AuthController::class,'getAllDoctor']);
 Route::get('/displayPlanning/{objet}/{date}',[PlanningController::class,'getDisponibilites']);
 Route::get('/listRdvMed/{objet}',[RendezVousController::class,'getMedecinAppointments']);
 Route::post('/valideRdv/{objet}',[RendezVousController::class,'validaterdv']);
+Route::get('/getMedecinByService/{objet}',[ServiceController::class,'getMedecinByService']);
 Route::middleware('auth:api')->group(function ()
 {
     Route::get('/user-profile',[AuthController::class,'profile']);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Service;
+use App\Models\User;
 use Illuminate\Http\Request;
 use PHPUnit\Exception;
 
@@ -30,7 +31,25 @@ class ServiceController extends Controller
             ], 500);
         }
     }
+    public function getMedecinByService($id)
+    {
+        try {
+            $medecins = User::where('service_id', $id)
+                ->where('role', 'medecin')
+                ->get();
 
+            return response()->json([
+                'statut' => 201,
+                'data' => $medecins,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'statut' => false,
+                'message' => 'Erreur lors de la récupération des médecins',
+                'erreur' => $e->getMessage(),
+            ], 500);
+        }
+    }
     /**
      * Show the form for creating a new resource.
      */

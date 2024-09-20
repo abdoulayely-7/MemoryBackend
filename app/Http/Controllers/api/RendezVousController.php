@@ -100,4 +100,17 @@ class RendezVousController extends Controller
             'status' => $rdv->status
         ], 200);
     }
+    public function getMedecinAppointment($medecinId)
+    {
+        $appointments = RendezVous::where('medecin_id', $medecinId)
+            ->with(['patient', 'creneau.planning'])
+            ->where('status', 'confirmé')
+            ->get();
+
+        return response()->json([
+            'statut' => true,
+            'data' => $appointments,
+        ], 200);
+    }
+
 }
