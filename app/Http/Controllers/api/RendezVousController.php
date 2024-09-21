@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\api;
 
+use App\Events\RendezVousNotification;
 use App\Http\Controllers\Controller;
 use App\Models\RendezVous;
 use App\Models\User;
@@ -91,7 +92,8 @@ class RendezVousController extends Controller
             $rdv->status = 'annulé'; // Exemple de statut pour refusé
         }
         $rdv->save();
-
+        // Diffuser une notification en temps réel au patient
+        broadcast(new RendezVousNotification($rdv->patient, $rdv->status))->toOthers();
         // Message en fonction du nouveau statut
         $message = $status === 'accepté' ? 'Rendez-vous accepté avec succès.' : 'Rendez-vous refusé avec succès.';
 
