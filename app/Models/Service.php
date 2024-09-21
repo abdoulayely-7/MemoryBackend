@@ -12,4 +12,10 @@ class Service extends Model
     protected $fillable=[
         'nomService'
     ];
+    // Dans le modèle Service.php
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
+
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Service;
+use App\Models\Specialite;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -26,17 +27,17 @@ class AdminController extends Controller
             "motDePasse" => "required|min:6",
             "role" => "required",
             "service_id" => "required",
-            //"photo" => "nullable|image|mimes:jpeg,png,jpg,gif|max:6048", // Validation pour l'image
+            "photo" => "nullable|image|mimes:jpeg,png,jpg,gif|max:6048", // Validation pour l'image
         ]);
         Log::info($data);
         try {
             // Traitement de l'upload de l'image
-            /*if ($request->hasFile('photo')) {
+              if ($request->hasFile('photo')) {
                 $filename = time() . '_' . $request->file('photo')->getClientOriginalName();
                 $path = $request->file('photo')->storeAs('images', $filename, 'public');
                 // Chemin stocké dans la base de données
                 $data['photo'] = '/storage/' . $path;
-            }*/
+            }
 
             // Hash du mot de passe avant de le stocker
             $data['motDePasse'] = Hash::make($data['motDePasse']);
@@ -133,8 +134,7 @@ class AdminController extends Controller
     public function getUser()
     {
         try {
-            $users = User::where('role', '!=', 'admin')
-                ->with('service') // Inclure les détails du service
+            $users = User::whereIn('role', ['medecin', 'secretaire'])
                 ->get();
 
             return response()->json([
@@ -198,6 +198,9 @@ class AdminController extends Controller
         $service->delete();
         return response()->json(['statut' => 200, 'message' => 'Service deleted successfully']);
     }
-
+    public function getSpecialites()
+    {
+        return Specialite::all();
+    }
 
 }

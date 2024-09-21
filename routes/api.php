@@ -38,6 +38,7 @@ Route::get('/creneaux/{id}', [CreneauController::class, 'show']);
 
 Route::post('/rendez-vous', [RendezVousController::class, 'store']);
 Route::get('/rendez-vous/{id}', [RendezVousController::class, 'show']);
+Route::get('/medecins', [\App\Http\Controllers\Api\AuthController::class, 'search']);
 
 
 
@@ -70,6 +71,7 @@ Route::middleware('auth:api')->group(function ()
     Route::get('/list-med-service',[AuthController::class,'getMedecinMemeService']);
     Route::put('/services/{id}', [AdminController::class, 'updateService']);
     Route::delete('/services/{id}', [AdminController::class, 'destroyService']);
+    Route::get('/specialites',[\App\Http\Controllers\Api\AdminController::class,'getSpecialites']);
 
     // Pour le patient
     Route::post('/addRdv',[RendezVousController::class,'store']);

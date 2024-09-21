@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\RendezVousAccepte;
+use App\Mail\RendezVousAnnule;
 use App\Models\RendezVous;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Twilio\Rest\Client;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class RendezVousController extends Controller
@@ -71,6 +75,11 @@ class RendezVousController extends Controller
         ], 200);
     }
 
+    use Twilio\Rest\Client;
+
+    use App\Mail\RendezVousAnnule;
+    use Illuminate\Support\Facades\Mail;
+
     public function validaterdv($id, Request $request)
     {
         // Trouver le rendez-vous par ID
@@ -87,17 +96,47 @@ class RendezVousController extends Controller
         $status = $request->input('status'); // Attendu: 'accepté' ou 'refusé'
         if ($status === 'accepté') {
             $rdv->status = 'confirmé'; // Exemple de statut pour accepté
+            $message = 'Votre rendez-vous a été accepté avec succès.';
         } else {
             $rdv->status = 'annulé'; // Exemple de statut pour refusé
+            $message = 'Votre rendez-vous a été refusé avec succès.';
         }
         $rdv->save();
 
-        // Message en fonction du nouveau statut
-        $message = $status === 'accepté' ? 'Rendez-vous accepté avec succès.' : 'Rendez-vous refusé avec succès.';
+        // Envoyer un SMS
+        $this->sendSms($rdv->patient->telephone, $message);
+
+        // Envoyer un email après annulation
+        if ($status !== 'accepté') {
+            Mail::to($rdv->patient->email)->send(new RendezVousAnnule($rdv, $message));
+        }elseif ($status  == 'accepté') {
+                Mail::to($rdv->patient->email)->send(new RendezVousAccepte($rdv, $message));
+            }
 
         return response()->json([
             'message' => $message,
             'status' => $rdv->status
         ], 200);
     }
+
+
+    private function sendSms($to, $message)
+    {
+        $sid = env('TWILIO_SID');
+        $token = env('TWILIO_AUTH_TOKEN');
+        $twilioNumber = env('TWILIO_PHONE_NUMBER');
+
+        $client = new Client($sid, $token);
+
+        try {
+            $client->messages->create($to, [
+                'from' => $twilioNumber,
+                'body' => $message
+            ]);
+        } catch (\Exception $e) {
+            // Gérer les exceptions si l'envoi échoue
+            \Log::error('Erreur lors de l\'envoi du SMS: ' . $e->getMessage());
+        }
+    }
+
 }

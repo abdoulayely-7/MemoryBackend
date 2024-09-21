@@ -39,7 +39,7 @@ class AuthController extends Controller
 
             // Définir le statut par défaut à "debloquer"
             $data['status'] = 0;
-            $data['role'] = 'patient';
+            $data['role'] = 'admin';
 
             // Création de l'utilisateur
             $user = User::create($data);
@@ -229,4 +229,28 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    public function search (Request $request)
+    {
+        $nom = $request->query('nom');
+        $service_id = $request->query('service_id');
+
+        $medecins = User::where('role', 'medecin') // Filtrer uniquement les médecins
+        ->when($nom, function($query, $nom) {
+            return $query->where('nom', 'like', '%' . $nom . '%');
+        })
+            ->when($service_id, function($query, $service_id) {
+                return $query->where('service_id', $service_id);
+            })
+            ->with('service') // Charge le service avec les médecins
+            ->get();
+        if ($nom) {
+            $medecins->whereHas('user', function ($q) use ($nom) {
+                $q->whereRaw('LOWER(nom) LIKE ?', ['%' . strtolower($nom) . '%']);
+            });
+        }
+
+        return response()->json($medecins);
+    }
+
 }
