@@ -28,8 +28,14 @@ class User extends Authenticatable implements JWTSubject
         'photo',
         'email',
         'motDePasse',
+        'service_id',
         'status',
     ];
+    public function service()
+    {
+        return $this->belongsTo(Service::class,'service_id');
+    }
+
 
     /**
      * The attributes that should be hidden for serialization.

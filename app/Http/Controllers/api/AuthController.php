@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Service;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -70,7 +71,6 @@ class AuthController extends Controller
             'email' => 'required|email',
             'motDePasse' => 'required',
         ]);
-
         // Rechercher l'utilisateur par email
         $user = User::where('email', $request->email)->first();
 
@@ -78,22 +78,26 @@ class AuthController extends Controller
         if (!$user || !Hash::check($request->motDePasse, $user->motDePasse)) {
             return response()->json([
                 'message' => 'Email ou mot de passe incorrect.',
-                'status' => false
+                'status' => 1
             ], 401);
         }
-
+        if ($user->status == 1) {
+            return response()->json([
+                'message' => 'Votre compte est bloqué. Veuillez contacter l\'administrateur.',
+                'status' => 1
+            ], 403);
+        }
         // Générer un token JWT pour l'utilisateur
         if (!$token = JWTAuth::fromUser($user)) {
             return response()->json([
                 'message' => 'Erreur lors de la génération du token.',
-                'status' => false
+//                'status' => false
             ], 500);
         }
-
         // Retourner la réponse avec le token et les informations de l'utilisateur
         return response()->json([
             'message' => 'Connexion réussie.',
-            'status' => true,
+            'status' => 0,
             'token' => $token,
             'user' => $user,
             'roles' => $user->role,
@@ -133,7 +137,96 @@ class AuthController extends Controller
         return response()->json([
             'prenom' => $user->prenom,
             'nom' => $user->nom,
-            'role' => $user->role
+            'role' => $user->role,
+//            'photo' => $user->photo ? asset($user->photo) : null,
         ]);
+    }
+    public function getUserRole()
+    {
+        // Récupérer l'utilisateur connecté
+        $user = Auth::user();
+
+        // Vérifier si l'utilisateur est authentifié
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Retourner le rôle de l'utilisateur
+        return response()->json([
+            'role' => $user->role,
+        ], 200);  // Statut HTTP 200 OK pour une requête réussie
+    }
+    public function getPatient()
+    {
+        // Récupérer l'utilisateur connecté
+        $user = Auth::user();
+
+        // Vérifier si l'utilisateur est authentifié
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Retourner le rôle de l'utilisateur
+        return response()->json([
+            'role' => $user->role,
+        ], 200);  // Statut HTTP 200 OK pour une requête réussie
+    }
+    public function getMedecinMemeService()
+    {
+        try {
+            // Obtenir l'utilisateur connecté (secrétaire)
+            $secretaire = auth()->user();
+
+            // Vérifier si l'utilisateur connecté est bien un secrétaire
+            if ($secretaire->role !== 'secretaire') {
+                return response()->json([
+                    'statut' => false,
+                    'message' => 'Utilisateur non autorisé'
+                ], 403);
+            }
+
+            // Récupérer les médecins dans le même service que le secrétaire
+            $medecins = User::where('service_id', $secretaire->service_id)
+                ->where('role', 'medecin')
+                ->with('service') // Inclure les informations du service des médecins
+                ->get();
+
+            // Inclure également les informations du service du secrétaire
+            $serviceSecretaire = Service::find($secretaire->service_id);
+
+            $token = JWTAuth::fromUser($secretaire);
+            return response()->json([
+                'statut' => 201,
+                'data' => $medecins,
+                'secretaireService' => $serviceSecretaire,
+                'token' => $token,
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'statut' => false,
+                'message' => 'Erreur lors de la récupération des médecins',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+    public function getAllDoctor()
+    {
+        try {
+            $medecin = User::where('role','medecin')->with('service')->get();
+
+            return response()->json([
+                'statut' => 201,
+                'data' => $medecin
+            ], 201);
+
+        }catch (\Exception $e)
+        {
+            return response()->json([
+                'statut' => false,
+                'message' => 'Erreur lors de la récupération des médecins',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
