@@ -4,10 +4,12 @@ namespace App\Http\Controllers\api;
 
 use App\Events\RendezVousNotification;
 use App\Http\Controllers\Controller;
+use App\Mail\RendezVousStatusEmail;
 use App\Models\RendezVous;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class RendezVousController extends Controller
@@ -92,8 +94,16 @@ class RendezVousController extends Controller
             $rdv->status = 'annulé'; // Exemple de statut pour refusé
         }
         $rdv->save();
+
+
+        // Préparer l'email
+        $subject = 'Demande de rendez-vous';
+        $body = "Bonjour " . $rdv->patient->prenom . ",\n\nVotre rendez-vous prévu pour le " . $rdv->creneau->planning->datePlanning . " a été " . ($rdv->status == 'confirmé' ? "accepté" : "refusé") . ".\n\nMerci de votre confiance.\nCordialement,\nL'équipe médicale";
+
+        // Envoyer l'email
+        Mail::to($rdv->patient->email)->send(new RendezVousStatusEmail($subject, $body, $rdv->patient, $rdv->creneau->planning->datePlanning, $rdv->status));
         // Diffuser une notification en temps réel au patient
-        broadcast(new RendezVousNotification($rdv->patient, $rdv->status))->toOthers();
+//        broadcast(new RendezVousNotification($rdv->patient, $rdv->status))->toOthers();
         // Message en fonction du nouveau statut
         $message = $status === 'accepté' ? 'Rendez-vous accepté avec succès.' : 'Rendez-vous refusé avec succès.';
 
@@ -114,5 +124,55 @@ class RendezVousController extends Controller
             'data' => $appointments,
         ], 200);
     }
+    public function getPatientAppointments()
+    {
+        // Récupérer l'ID du patient connecté
+        $patientId = auth()->user()->id;
 
+        // Récupérer les rendez-vous du patient
+        $appointments = RendezVous::where('patient_id', $patientId)
+            ->with(['medecin', 'creneau.planning'])
+            ->where('status', 'confirmé')
+            ->get();
+
+        return response()->json([
+            'statut' => true,
+            'data' => $appointments,
+        ], 200);
+    }
+
+    public function testEmail()
+    {
+        Mail::to('afndiaye@groupeisi.com')->send(new RendezVousStatusEmail('Test Subject',
+            'Test Body', (object)['prenom' => 'Test'], '2024-09-22', 'confirmé'));
+
+        return response()->json(['message' => 'Email envoyé avec succès.']);
+    }
+    public function getAppointmentC()
+    {
+        try {
+            $totalRdv = RendezVous::count();
+            $confirmeRdv = RendezVous::where('status','confirmé')->count();
+            $refuserRdv = RendezVous::where('status','annulé')->count();
+            $percentageAnnu = $totalRdv > 0 ? ($refuserRdv / $totalRdv) * 100 : 0;
+            $percentage = $totalRdv > 0 ? ($confirmeRdv  / $totalRdv) * 100 : 0;
+            return response()->json([
+                'statut' => 200,
+                'data' => [
+                    'total' => $totalRdv,
+                    'confirmer' => $confirmeRdv,
+                    'refuser' => $refuserRdv,
+                    'pourcentage' => round($percentage, 2),
+                    'pourcentagerefuser' => round($percentageAnnu, 2),
+                ],
+            ], 200);
+        }catch (\Exception $e)
+        {
+            return response()->json([
+                'statut' => false,
+                'message' => 'Erreur lors de la récupération des rendez-vous',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

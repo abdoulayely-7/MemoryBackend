@@ -54,8 +54,13 @@ Route::get('/displayPlanning/{objet}/{date}',[PlanningController::class,'getDisp
 Route::get('/listRdvMed/{objet}',[RendezVousController::class,'getMedecinAppointments']);
 Route::post('/valideRdv/{objet}',[RendezVousController::class,'validaterdv']);
 Route::get('/getMedecinByService/{objet}',[ServiceController::class,'getMedecinByService']);
+Route::post('/testmail',[RendezVousController::class,'testEmail']);
+Route::get('/allPatient',[\App\Http\Controllers\api\SecretaireController::class,'getAllPatient']);
+Route::get('/appointmentConf',[RendezVousController::class,'getAppointmentC']);
+
 Route::middleware('auth:api')->group(function ()
 {
+    Route::get('/apointmentsPatient',[RendezVousController::class,'getPatientAppointments']);
     Route::get('/user-profile',[AuthController::class,'profile']);
     Route::get('/user-role',[AuthController::class,'getUserRole']);
     Route::post('/logout',[AuthController::class,'logout'])->name('logout');

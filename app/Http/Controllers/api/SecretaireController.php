@@ -46,7 +46,23 @@ class SecretaireController extends Controller
             ], 500);
         }
     }
-
+    public function getAllPatient()
+    {
+        try {
+            $patient = User::where('role','patient')->count();
+            return response()->json([
+                'statut' => 201,
+                'data' => $patient,
+            ], 201);
+        }catch (\Exception $e)
+        {
+            return response()->json([
+                'statut' => false,
+                'message' => 'Erreur lors de la récupération des patients',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
     /**
      * Show the form for creating a new resource.
      */
