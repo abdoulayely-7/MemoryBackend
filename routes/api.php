@@ -3,6 +3,7 @@
 use App\Http\Controllers\api\AdminController;
 use App\Http\Controllers\api\AuthController;
 use App\Http\Controllers\api\CreneauController;
+use App\Http\Controllers\api\DialogflowController;
 use App\Http\Controllers\api\PasswordResetController;
 use App\Http\Controllers\api\PlanningController;
 use App\Http\Controllers\api\RendezVousController;
@@ -39,6 +40,8 @@ Route::get('/creneaux/{id}', [CreneauController::class, 'show']);
 Route::post('/rendez-vous', [RendezVousController::class, 'store']);
 Route::get('/rendez-vous/{id}', [RendezVousController::class, 'show']);
 Route::get('/mesRdv/{objet}',[RendezVousController::class,'getMedecinAppointment']);
+
+Route::post('/dialogflow-webhook', [DialogflowController::class, 'handle']);
 
 
 
