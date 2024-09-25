@@ -20,7 +20,7 @@ class Kernel extends ConsoleKernel
                 ->whereHas('creneau', function($query) {
                     $query->whereHas('planning', function($query) {
                         // On vérifie que la date du planning est bien celle du lendemain
-                        $query->whereDate('datePlanning', now()->addDays(2)->format('Y-m-d'));
+                        $query->whereDate('datePlanning', now()->addDay()->format('Y-m-d'));
                     });
                 })
                 ->get();

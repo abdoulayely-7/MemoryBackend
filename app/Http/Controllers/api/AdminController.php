@@ -22,21 +22,20 @@ class AdminController extends Controller
             "adresse" => "required",
             "telephone" => "required|unique:users|min:9",
             "sexe" => "required",
+            "experience" => "nullable",
             "email" => "required|email|unique:users",
             "motDePasse" => "required|min:6",
             "role" => "required",
             "service_id" => "required",
-            //"photo" => "nullable|image|mimes:jpeg,png,jpg,gif|max:6048", // Validation pour l'image
+            "photo" => "nullable|image|mimes:jpeg,png,jpg,gif", // Validation pour l'image
         ]);
         Log::info($data);
         try {
-            // Traitement de l'upload de l'image
-            /*if ($request->hasFile('photo')) {
+            if ($request->hasFile('photo')) {
                 $filename = time() . '_' . $request->file('photo')->getClientOriginalName();
                 $path = $request->file('photo')->storeAs('images', $filename, 'public');
-                // Chemin stocké dans la base de données
-                $data['photo'] = '/storage/' . $path;
-            }*/
+                $data['photo'] = '/storage/' . $path; // Chemin stocké dans la base de données
+            }
 
             // Hash du mot de passe avant de le stocker
             $data['motDePasse'] = Hash::make($data['motDePasse']);
