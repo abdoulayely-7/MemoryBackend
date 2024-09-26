@@ -57,7 +57,8 @@ Route::get('/getMedecinByService/{objet}',[ServiceController::class,'getMedecinB
 Route::post('/testmail',[RendezVousController::class,'testEmail']);
 Route::get('/allPatient',[\App\Http\Controllers\api\SecretaireController::class,'getAllPatient']);
 Route::get('/appointmentConf',[RendezVousController::class,'getAppointmentC']);
-
+Route::get('/statistiques',[AdminController::class,'getCountUser']);
+Route::post('/annulerRdv/{objet}',[RendezVousController::class,'annulerRendezVous']);
 Route::middleware('auth:api')->group(function ()
 {
     Route::get('/apointmentsPatient',[RendezVousController::class,'getPatientAppointments']);

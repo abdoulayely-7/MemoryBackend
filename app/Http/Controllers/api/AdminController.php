@@ -198,6 +198,30 @@ class AdminController extends Controller
         $service->delete();
         return response()->json(['statut' => 200, 'message' => 'Service deleted successfully']);
     }
+    public function getCountUser()
+    {
+        try {
+            $patientsCount = User::where('role','patient')->count();
+            // Récupérer le nombre de secrétaires
+            $secretairesCount = User::where('role', 'secretaire')->count();
 
+            // Récupérer le nombre de médecins
+            $medecinsCount = User::where('role', 'medecin')->count();
+
+            return response()->json([
+                'status' => true,
+                'patients' => $patientsCount,
+                'secretaires' => $secretairesCount,
+                'medecins' => $medecinsCount,
+            ], 200);
+        }catch (\Exception $e)
+        {
+            return response()->json([
+                'statut' => false,
+                'message' => 'Erreur lors de la récupération des patients',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 
 }

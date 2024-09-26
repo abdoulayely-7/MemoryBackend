@@ -175,4 +175,26 @@ class RendezVousController extends Controller
             ], 500);
         }
     }
+    public function annulerRendezVous($id)
+    {
+        // Trouver le rendez-vous par ID
+        $rdv = RendezVous::find($id);
+
+        if (!$rdv) {
+            return response()->json([
+                'message' => 'Rendez-vous non trouvé.',
+                'status' => 'error'
+            ], 404);
+        }
+        $rdv->status = 'annulé';
+        $rdv->save();
+        $subject = 'Demande de rendez-vous';
+        $body = "Bonjour " . $rdv->patient->prenom . ",\n\nVotre rendez-vous prévu pour le " . $rdv->creneau->planning->datePlanning . " a été " . $rdv->status . ".\n\nMerci de votre confiance.\nCordialement,\nL'équipe médicale";
+        Mail::to($rdv->patient->email)->send(new RendezVousStatusEmail($subject, $body, $rdv->patient, $rdv->creneau->planning->datePlanning, $rdv->status));
+        $message = 'Rendez-vous annulé avec succès.';
+        return response()->json([
+            'message' => $message,
+            'status' => $rdv->status
+        ], 200);
+    }
 }
